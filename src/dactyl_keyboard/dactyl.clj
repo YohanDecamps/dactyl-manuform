@@ -14,7 +14,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (def nrows 5)
-(def ncols 7)
+(def ncols 6)
 
 (def α (/ π 12))                       ; curvature of the columns
 (def β (/ π 36))                       ; curvature of the rows
@@ -22,12 +22,12 @@
 (def centercol 4)                      ; controls left-right tilt / tenting (higher number is more tenting)
 (def tenting-angle (/ π 12))           ; or, change this for more precise tenting control
 
-(def pinky-15u true)                   ; controls whether the outer column uses 1.5u keys
+(def pinky-15u false)                   ; controls whether the outer column uses 1.5u keys
 (def first-15u-row 0)                  ; controls which should be the first row to have 1.5u keys on the outer column
 (def last-15u-row 3)                   ; controls which should be the last row to have 1.5u keys on the outer column
 
-(def extra-row true)                   ; adds an extra bottom row to the outer column(s)
-(def inner-column true)                ; adds an extra inner column (two less rows than nrows)
+(def extra-row false)                   ; adds an extra bottom row to the outer column(s)
+(def inner-column false)                ; adds an extra inner column (two less rows than nrows)
 (def thumb-style "cf")                 ; toggles between "manuform", "mini", and "cf" thumb cluster
 
 (def column-style :standard)
@@ -38,8 +38,8 @@
           (= column 3) [0 2.82 -4.5]
           (>= column 5) [0 -12 5.64]   ; original [0 -5.8 5.64]
           :else [0 0 0])
-    (cond (= column 0) [0 -2 0]
-		  (= column 2) [0 2.82 -4.5]
+    (cond (= column 0) [0 0 0]
+		      (= column 2) [0 2.82 -4.5]
           (>= column 4) [0 -12 5.64]   ; original [0 -5.8 5.64]
           :else [0 0 0])))
 
@@ -56,7 +56,7 @@
 
 ; If you use Cherry MX or Gateron switches, this can be turned on.
 ; If you use other switches such as Kailh, you should set this as false
-(def create-side-nubs? false)
+(def create-side-nubs? true)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; General variables ;;
@@ -955,7 +955,7 @@
 (defn bottom-hull [& p]
   (hull p (bottom 0.001 p)))
 
-(def left-wall-x-offset (if inner-column 4 9))
+(def left-wall-x-offset (if inner-column 4 5))
 (def left-wall-z-offset 1) 
 
 (defn left-key-position [row direction]
@@ -1271,7 +1271,7 @@
 (def holder-offset
   (case nrows
     4 -3.5
-    5 (if inner-column 0 -6.5)
+    5 (if inner-column 0 -0.5)
     6 (if inner-column 3.2 2.2)))
 
 (def notch-offset
@@ -1284,8 +1284,6 @@
 (def usb-holder-ref (key-position 0 0 (map - (wall-locate2  0  -1) [0 (/ mount-height 2) 0])))
 (def usb-holder-position (map + [(+ 18.8 holder-offset) 18.7 1.3] [(first usb-holder-ref) (second usb-holder-ref) 1.8]))
 (def usb-holder-space  (translate (map + usb-holder-position [-1.5 (* -1 wall-thickness) 2.1]) (cube 28.666 30 10.4)))
-(def usb-holder-notch-l  (translate (map + usb-holder-position [-12 (+ 4.4 notch-offset) 2.1]) (cube 10 1.3 10.4)))
-(def usb-holder-notch-r  (translate (map + usb-holder-position [9 (+ (if inner-column 4.4 6.4) notch-offset) 2.1]) (cube 10 1.3 10.4)))
 
 ; Screw insert definition & position
 (defn screw-insert-shape [bottom-radius top-radius height]
@@ -1306,47 +1304,17 @@
          (translate (map + offset [(first position) (second position) (/ height 2)])))))
 
 ; Offsets for the screw inserts dependent on extra-row & pinky-15u
-(when (and pinky-15u extra-row)
-    (def screw-offset-tr [1 7 0])
-    (def screw-offset-br [7 14 0]))
-(when (and pinky-15u (false? extra-row))
-    (def screw-offset-tr [1 7 0])
-    (def screw-offset-br [6.5 15.5 0]))
-(when (and (false? pinky-15u) extra-row)
-    (def screw-offset-tr [-3.5 6.5 0])
-    (def screw-offset-br [-3.5 -6.5 0]))
-(when (and (false? pinky-15u) (false? extra-row))
-    (def screw-offset-tr [-4 6.5 0])
-    (def screw-offset-br [-6 13 0]))
+(def screw-offset-tr [-4 6.5 0])
+(def screw-offset-tl [4.5 1 0])
+(def screw-offset-br [-6 13 0])
     
 ; Offsets for the screw inserts dependent on thumb-style & inner-column
-(when (and (= thumb-style "cf") inner-column)
-    (def screw-offset-bl [9 4 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [13 -7 0]))
-(when (and (= thumb-style "cf") (false? inner-column))
-    (def screw-offset-bl [-3.5 2 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [13 -7 0]))
-(when (and (= thumb-style "mini") inner-column)
-    (def screw-offset-bl [14 8 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [-1 -7 0]))
-(when (and (= thumb-style "mini") (false? inner-column))
-    (def screw-offset-bl [-1 4.2 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [-1 -7 0]))
-(when (and (= thumb-style "manuform") inner-column)
-    (def screw-offset-bl [5 -6 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [8 -1 0]))
-(when (and (= thumb-style "manuform") (false? inner-column))
-    (def screw-offset-bl [-11.7 -8 0])
-    (def screw-offset-tm [9.5 -4.5 0])
-    (def screw-offset-bm [8 -1 0]))
+(def screw-offset-bl [-9.5 3 0])
+(def screw-offset-tm [8.5 -4.5 0])
+(def screw-offset-bm [-10 -20 0])
 
          (defn screw-insert-all-shapes [bottom-radius top-radius height]
-  (union (screw-insert 0 0         bottom-radius top-radius height [8 10.5 0])
+  (union (screw-insert 0 0         bottom-radius top-radius height screw-offset-tl)
          (screw-insert 0 lastrow   bottom-radius top-radius height screw-offset-bl)
          (screw-insert lastcol lastrow  bottom-radius top-radius height screw-offset-br)
          (screw-insert lastcol 0         bottom-radius top-radius height screw-offset-tr)
@@ -1420,8 +1388,6 @@
                      (difference (union case-walls
                                         screw-insert-outers)
                                  usb-holder-space
-                                 usb-holder-notch-l
-                                 usb-holder-notch-r
                                  screw-insert-holes))
                    (translate [0 0 -20] (cube 350 350 40))))
 
